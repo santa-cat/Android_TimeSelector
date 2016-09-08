@@ -34,7 +34,7 @@ public class TimeSelectorView extends LinearLayout {
     private Paint mPaint = new Paint();
     private ArrayList<ListView> mTimeView;
     private int mTimeViewMidLine = -1;
-    private int mChildHeight = -1;
+//    private int mChildHeight = -1;
     //options
     private int mTextSize = 18;
     private int mTitleColor = Color.BLACK;
@@ -225,12 +225,6 @@ public class TimeSelectorView extends LinearLayout {
     }
 
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-    }
-
-
     private class TSScrollListener implements AbsListView.OnScrollListener{
 
         @Override
@@ -241,7 +235,7 @@ public class TimeSelectorView extends LinearLayout {
                     View viewTop = (view.getChildAt(0));
                     if (viewTop.getTop() < 0) {
                         if (Math.abs(viewTop.getTop()) > viewTop.getHeight()/2) {
-                            ((ListView)view).smoothScrollToPosition(view.getFirstVisiblePosition() + view.getChildCount()-1);
+                            ((ListView)view).smoothScrollToPosition(view.getFirstVisiblePosition()+view.getChildCount()-1);
                         } else {
                             ((ListView)view).smoothScrollToPosition(view.getFirstVisiblePosition());
                         }
@@ -276,17 +270,21 @@ public class TimeSelectorView extends LinearLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        //第一次进入需要调用
+        int childHeight = ((ListView) mContainerContent.getChildAt(0)).getChildAt(0).getHeight();
+        int count = ((ListView) mContainerContent.getChildAt(0)).getChildCount();
+        int offsetItem = (count-1)/2;
+
+        int topLine = offsetItem*childHeight+mContainerHeader.getBottom();
+        int bottomLine = (offsetItem+1)*childHeight+mContainerHeader.getBottom();
+
         if(mTimeViewMidLine == -1) {
             mTimeViewMidLine = (getHeight() + mContainerHeader.getBottom()) / 2;
-            mChildHeight = ((ListView) mContainerContent.getChildAt(0)).getChildAt(0).getHeight();
-            //以下两个都需要算出高度
-            createImage();
+            createImage(topLine, bottomLine);
             selectCurTime();
         }
 
-        canvas.drawLine(0, mTimeViewMidLine - mChildHeight/2, getWidth(), mTimeViewMidLine - mChildHeight/2, mPaint);
-        canvas.drawLine(0, mTimeViewMidLine + mChildHeight/2, getWidth(), mTimeViewMidLine + mChildHeight/2, mPaint);
+        canvas.drawLine(0, topLine, getWidth(), topLine, mPaint);
+        canvas.drawLine(0, bottomLine, getWidth(), bottomLine, mPaint);
     }
 
 
@@ -297,14 +295,16 @@ public class TimeSelectorView extends LinearLayout {
         }
     }
 
-    private void createImage(){
-        imageViewTop.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, layout.getHeight()/2 -  mChildHeight/2));
+    private void createImage(int topLine, int bottomLine){
+
+        imageViewTop.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, topLine - mContainerHeader.getBottom()));
         layout.addView(imageViewTop);
 
-        RelativeLayout.LayoutParams l = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, layout.getHeight()/2 -  mChildHeight/2);
+        RelativeLayout.LayoutParams l = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, layout.getHeight() -  bottomLine + mContainerHeader.getBottom());
         l.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
         imageViewBottom.setLayoutParams(l);
         layout.addView(imageViewBottom);
+
     }
 
     public void setListener(TimeChangeListener listener) {
